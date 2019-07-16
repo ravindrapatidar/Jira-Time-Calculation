@@ -15,5 +15,9 @@
   "bugs": {
     "url": "https://github.com/ravindrapatidar/Jira-Time-Calculation/issues"
   },
-  "homepage": "https://github.com/ravindrapatidar/Jira-Time-Calculation#readme"
+  "homepage": "https://github.com/ravindrapatidar/Jira-Time-Calculation#readme",
+  "dependencies": {
+    "jira-connector": "^2.15.6",
+    "q": "^1.5.1"
+  }
 }
