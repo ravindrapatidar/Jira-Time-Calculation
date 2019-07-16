@@ -1,0 +1,19 @@
+{
+  "name": "jira-time-calculation",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ravindrapatidar/Jira-Time-Calculation.git"
+  },
+  "author": "Ravindra patidar",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ravindrapatidar/Jira-Time-Calculation/issues"
+  },
+  "homepage": "https://github.com/ravindrapatidar/Jira-Time-Calculation#readme"
+}
