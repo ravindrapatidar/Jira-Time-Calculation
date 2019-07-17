@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/ravindrapatidar/Jira-Time-Calculation#readme",
   "dependencies": {
+    "@types/node": "^12.6.3",
     "jira-connector": "^2.15.6",
     "q": "^1.5.1"
   }
