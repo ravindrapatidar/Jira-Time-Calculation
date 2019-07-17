@@ -4,7 +4,10 @@ const fs = require('fs');
 const config = JSON.parse(fs.readFileSync("./config.json"));
 var storyPointKey = ""
 var jsonArrEpic: any = [];
-var newJsonArr:any = [];
+var newJsonArr: any = [];
+var newNewJsonArr: any = [];
+var arrIssues: any = [];
+var newJsonEpic: any = [];
 
 const initJiraClient = (projName: string) => {
     var host = projName + ".atlassian.net"
@@ -50,7 +53,7 @@ const getEpicIssues = (arrEpicIds: []) => {
     });
     return q.allSettled(arrAsyncCalls);
 }
-const apiCall = (key: string, epicId: string, arrJsonEpic: []) => {
+const apiCall = (key: string, epicId: string, arrJsonEpic: [], parentKey: string) => {
     // var str = config.jiraProjectName + ".atlassian.net"
     // var url = "https://" + str + "rest/api/3/issue/NOD-130" 
     //var jira = initJiraClient(config.jiraProjectName);
@@ -58,23 +61,23 @@ const apiCall = (key: string, epicId: string, arrJsonEpic: []) => {
     var timeKey = "timeestimate"
     var arrSubtask: any = [];
 
-    var obj = { "issueKey": epicId }
-
+    var obj = { "parentKey": parentKey }
     var jira = initJiraClient(config.jiraProjectKey);
 
     return jira.issue.getIssue({ issueKey: epicId }).then(issue => {
         console.log(issue.fields[key]);
+        obj["issueKey"] = issue["key"]
         if (issue.fields[key] != undefined) {
             obj["story_point"] = issue.fields[key]
             arrSubtask.push(obj);
-            arrJsonEpic["subtaks"] = arrSubtask
-            return arrJsonEpic
+            // arrJsonEpic["subtaks"] = arrSubtask
+            return arrSubtask
         } else {
             //if (issue.field[timeKey]) {
             obj["timeEstimate"] = issue.fields[timeKey]
             arrSubtask.push(obj);
-            arrJsonEpic["subtaks"] = arrSubtask
-            return arrJsonEpic
+            // arrJsonEpic["subtaks"] = arrSubtask
+            return arrSubtask
         }
     }).catch(function (err) {
         console.log(err);
@@ -85,22 +88,23 @@ const apiCall = (key: string, epicId: string, arrJsonEpic: []) => {
 }
 const makeNewJsonEpic = (arrEpicIssues: [], oldJsonEpic: []) => {
     var arrAsyncCalls = [];
-  
+
     var timeKey = "timeestimate"
     arrEpicIssues.forEach((epics) => {
         let epicObjects: [] = epics["value"];
         epicObjects.forEach((epicObject) => {
-            var newJsonEpic: any = [];
+
             let epicId = epicObject["epicId"]
             var obj1 = { "epickey": epicId }
             newJsonEpic.push(obj1);
-            var arrIssues: any = [];
+
             let arr: [] = epicObject["issues"]
             arr.forEach((issue) => {
                 if (issue["fields"]) {
                     console.log(issue["fields"]);
                     let fields = issue["fields"];
-                    var obj = {"issueKey" : issue["key"] }
+                    var parentKey = issue["key"]
+                    var obj = { "issueKey": issue["key"] }
                     if (fields[storyPointKey] != undefined) {
                         obj["story_point"] = fields[storyPointKey];
                     } else {
@@ -114,95 +118,139 @@ const makeNewJsonEpic = (arrEpicIssues: [], oldJsonEpic: []) => {
                     arrIssues.push(obj);
                     let subtasks: [] = fields["subtasks"]
                     if (subtasks.length > 0) {
+                        var arrSubTaks: any = [];
                         subtasks.forEach((task) => {
                             let issueId = task["key"]
-                            arrAsyncCalls.push(apiCall(storyPointKey, issueId, newJsonEpic))
+                            arrAsyncCalls.push(apiCall(storyPointKey, issueId, newJsonEpic, parentKey));
                         });
+
                     } else {
                         let issueId = issue["key"];
-                       // arrAsyncCalls.push(apiCall(storyPointKey, issueId, newJsonEpic))
+                        // arrAsyncCalls.push(apiCall(storyPointKey, issueId, newJsonEpic))
                     }
                 }
             });
-            var objIssue = {"issues": arrIssues}
-            newJsonEpic.push(objIssue);
-            console.log(newJsonEpic);
-          
-            jsonArrEpic.forEach(epicObj => {
-                var obj = {"epic_name": epicObj["epic_name"], "story_point" : epicObj["story_point"]}
-                newJsonEpic.forEach(newObj => {
-                   if (epicObj["epic_name"] == newObj["epickey"]) {
-                       obj["subtasks"] = arrIssues
-                       newJsonArr.push(obj)
-                   }
-                });
-               
-            });
-            console.log(newJsonArr);
-           
+
+
         });
     });
-        return q.allSettled(arrAsyncCalls);
+    return q.allSettled(arrAsyncCalls);
 
-    }
-const makeJsonEpic = (arrEpic: []) => {
-       
-        var arrEpicIds: any = [];
-        arrEpic.forEach(epic => {
-            var epicObj = { "epic_name": epic["key"], "story_point": epic["fields"][storyPointKey] }
-            jsonArrEpic.push(epicObj);
-            arrEpicIds.push(epic["key"]);
-        });
-        getEpicIssues(arrEpicIds).then(function (jsonEpicIssues) {
-            makeNewJsonEpic(jsonEpicIssues, jsonArrEpic).then(newJsonEpicIssue => {
-                console.log(newJsonEpicIssue);
-            })
-            console.log(jsonEpicIssues);
-        });
-
-    }
-    const getProjectEpic = (projectName: string) => {
-
-        var jira = initJiraClient(config.jiraProjectKey);
-        var jqlStr = `project = ${projectName} AND issuetype=Epic`
-        var opt = { jql: jqlStr };
-        jira.search.search(opt).then(epic => {
-            console.log(epic);
-            makeJsonEpic(epic.issues);
-        }).catch(function (err) {
-            console.log(err);
-            // API call failed...
-            throw err;
-        });
-    }
-
-    const getStoryPointAndTimeEstimateKey = () => {
-        var jira = initJiraClient(config.jiraProjectKey);
-
-        jira.field.getAllFields().then(fields => {
-            //console.log(issue.fields[key]);
-            var key = ""
-            var val = "Story Points"
-            var index;
-            // var arr = JSON.parse(fields);
-            var filteredObj = fields.find(function (item, i) {
-                if (item.name === val) {
-                    index = i;
+}
+const filterEpicJson = (arrSubtasks: []) => {
+    var newArrIssues: any = [];
+    arrIssues.forEach(issue => {
+        var arr: any = [];
+        arrSubtasks.forEach(task => {
+            if (task["parentKey"] == issue["epickey"]) {
+                var obj4 = { "issueKey": task["issueKey"] }
+                if (task["story_point"] != undefined) {
+                    obj4["story_point"] = task["story_point"]
+                } else {
+                    obj4["story_point"] = ""
                 }
-            });
-
-            console.log(fields[index].id);
-            if (index) {
-                key = fields[index].id;
-                storyPointKey = key;
-                getProjectEpic("Node-Data");
+                if (task["timeEstimate"] != undefined) {
+                    obj4["timeEstimate"] = task["timeEstimate"]
+                } else {
+                    obj4["timeEstimate"] = ""
+                }
+                arr.push(obj4);
             }
-        }).catch(function (err) {
-            // API call failed...
-            throw err;
         });
-    }
 
-    getStoryPointAndTimeEstimateKey();
+        var obj = { "issueKey": issue["key"] }
+        if (issue["story_point"] != undefined) {
+            obj["story_point"] = issue["story_point"];
+        } else {
+            obj["story_point"] = "";
+        }
+        if (issue["timeEstimate"] != undefined) {
+            obj["timeEstimate"] = issue["timeEstimate"];
+        } else {
+            obj["timeEstimate"] = "";
+        }
+        obj["subtasks"] = arr
+        newArrIssues.push(obj);
+
+    });
+
+    var objIssue = { "issues": newArrIssues }
+    newJsonEpic.push(objIssue);
+    console.log(newJsonEpic);
+
+    jsonArrEpic.forEach(epicObj => {
+        var obj = { "epic_name": epicObj["epic_name"], "story_point": epicObj["story_point"] }
+        newJsonEpic.forEach(newObj => {
+            if (epicObj["epic_name"] == newObj["epickey"]) {
+                obj["subtasks"] = newArrIssues
+                newJsonArr.push(obj)
+            }
+        });
+
+    });
+    console.log(newJsonArr);
+    let str = JSON.stringify(newJsonArr)
+    console.log(str);
+}
+const makeJsonEpic = (arrEpic: []) => {
+
+    var arrEpicIds: any = [];
+    arrEpic.forEach(epic => {
+        var epicObj = { "epic_name": epic["key"], "story_point": epic["fields"][storyPointKey] }
+        jsonArrEpic.push(epicObj);
+        arrEpicIds.push(epic["key"]);
+    });
+    getEpicIssues(arrEpicIds).then(function (jsonEpicIssues) {
+        makeNewJsonEpic(jsonEpicIssues, jsonArrEpic).then(newJsonEpicIssue => {
+            filterEpicJson(newJsonEpicIssue);
+            console.log(newJsonEpicIssue);
+        })
+        console.log(jsonEpicIssues);
+    });
+
+}
+const getProjectEpic = (projectName: string) => {
+
+    var jira = initJiraClient(config.jiraProjectKey);
+    var jqlStr = `project = ${projectName} AND issuetype=Epic`
+    var opt = { jql: jqlStr };
+    jira.search.search(opt).then(epic => {
+        console.log(epic);
+        makeJsonEpic(epic.issues);
+    }).catch(function (err) {
+        console.log(err);
+        // API call failed...
+        throw err;
+    });
+}
+
+const getStoryPointAndTimeEstimateKey = () => {
+    var jira = initJiraClient(config.jiraProjectKey);
+
+    jira.field.getAllFields().then(fields => {
+        //console.log(issue.fields[key]);
+        var key = ""
+        var val = "Story Points"
+        var index;
+        // var arr = JSON.parse(fields);
+        var filteredObj = fields.find(function (item, i) {
+            if (item.name === val) {
+                index = i;
+            }
+        });
+
+        console.log(fields[index].id);
+        if (index) {
+            key = fields[index].id;
+            storyPointKey = key;
+            getProjectEpic("Node-Data");
+        }
+    }).catch(function (err) {
+        // API call failed...
+        throw err;
+    });
+}
+
+getStoryPointAndTimeEstimateKey();
 
 

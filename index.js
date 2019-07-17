@@ -5,6 +5,9 @@ var config = JSON.parse(fs.readFileSync("./config.json"));
 var storyPointKey = "";
 var jsonArrEpic = [];
 var newJsonArr = [];
+var newNewJsonArr = [];
+var arrIssues = [];
+var newJsonEpic = [];
 var initJiraClient = function (projName) {
     var host = projName + ".atlassian.net";
     var jira = new JiraClient({
@@ -48,29 +51,30 @@ var getEpicIssues = function (arrEpicIds) {
     });
     return q.allSettled(arrAsyncCalls);
 };
-var apiCall = function (key, epicId, arrJsonEpic) {
+var apiCall = function (key, epicId, arrJsonEpic, parentKey) {
     // var str = config.jiraProjectName + ".atlassian.net"
     // var url = "https://" + str + "rest/api/3/issue/NOD-130" 
     //var jira = initJiraClient(config.jiraProjectName);
     var host = config.jiraProjectName + ".atlassian.net";
     var timeKey = "timeestimate";
     var arrSubtask = [];
-    var obj = { "issueKey": epicId };
+    var obj = { "parentKey": parentKey };
     var jira = initJiraClient(config.jiraProjectKey);
     return jira.issue.getIssue({ issueKey: epicId }).then(function (issue) {
         console.log(issue.fields[key]);
+        obj["issueKey"] = issue["key"];
         if (issue.fields[key] != undefined) {
             obj["story_point"] = issue.fields[key];
             arrSubtask.push(obj);
-            arrJsonEpic["subtaks"] = arrSubtask;
-            return arrJsonEpic;
+            // arrJsonEpic["subtaks"] = arrSubtask
+            return arrSubtask;
         }
         else {
             //if (issue.field[timeKey]) {
             obj["timeEstimate"] = issue.fields[timeKey];
             arrSubtask.push(obj);
-            arrJsonEpic["subtaks"] = arrSubtask;
-            return arrJsonEpic;
+            // arrJsonEpic["subtaks"] = arrSubtask
+            return arrSubtask;
         }
     })["catch"](function (err) {
         console.log(err);
@@ -84,16 +88,15 @@ var makeNewJsonEpic = function (arrEpicIssues, oldJsonEpic) {
     arrEpicIssues.forEach(function (epics) {
         var epicObjects = epics["value"];
         epicObjects.forEach(function (epicObject) {
-            var newJsonEpic = [];
             var epicId = epicObject["epicId"];
             var obj1 = { "epickey": epicId };
             newJsonEpic.push(obj1);
-            var arrIssues = [];
             var arr = epicObject["issues"];
             arr.forEach(function (issue) {
                 if (issue["fields"]) {
                     console.log(issue["fields"]);
                     var fields = issue["fields"];
+                    var parentKey = issue["key"];
                     var obj = { "issueKey": issue["key"] };
                     if (fields[storyPointKey] != undefined) {
                         obj["story_point"] = fields[storyPointKey];
@@ -110,9 +113,10 @@ var makeNewJsonEpic = function (arrEpicIssues, oldJsonEpic) {
                     arrIssues.push(obj);
                     var subtasks = fields["subtasks"];
                     if (subtasks.length > 0) {
+                        var arrSubTaks = [];
                         subtasks.forEach(function (task) {
                             var issueId = task["key"];
-                            arrAsyncCalls.push(apiCall(storyPointKey, issueId, newJsonEpic));
+                            arrAsyncCalls.push(apiCall(storyPointKey, issueId, newJsonEpic, parentKey));
                         });
                     }
                     else {
@@ -121,22 +125,63 @@ var makeNewJsonEpic = function (arrEpicIssues, oldJsonEpic) {
                     }
                 }
             });
-            var objIssue = { "issues": arrIssues };
-            newJsonEpic.push(objIssue);
-            console.log(newJsonEpic);
-            jsonArrEpic.forEach(function (epicObj) {
-                var obj = { "epic_name": epicObj["epic_name"], "story_point": epicObj["story_point"] };
-                newJsonEpic.forEach(function (newObj) {
-                    if (epicObj["epic_name"] == newObj["epickey"]) {
-                        obj["subtasks"] = arrIssues;
-                        newJsonArr.push(obj);
-                    }
-                });
-            });
-            console.log(newJsonArr);
         });
     });
     return q.allSettled(arrAsyncCalls);
+};
+var filterEpicJson = function (arrSubtasks) {
+    var newArrIssues = [];
+    arrIssues.forEach(function (issue) {
+        var arr = [];
+        arrSubtasks.forEach(function (task) {
+            if (task["parentKey"] == issue["epickey"]) {
+                var obj4 = { "issueKey": task["issueKey"] };
+                if (task["story_point"] != undefined) {
+                    obj4["story_point"] = task["story_point"];
+                }
+                else {
+                    obj4["story_point"] = "";
+                }
+                if (task["timeEstimate"] != undefined) {
+                    obj4["timeEstimate"] = task["timeEstimate"];
+                }
+                else {
+                    obj4["timeEstimate"] = "";
+                }
+                arr.push(obj4);
+            }
+        });
+        var obj = { "issueKey": issue["key"] };
+        if (issue["story_point"] != undefined) {
+            obj["story_point"] = issue["story_point"];
+        }
+        else {
+            obj["story_point"] = "";
+        }
+        if (issue["timeEstimate"] != undefined) {
+            obj["timeEstimate"] = issue["timeEstimate"];
+        }
+        else {
+            obj["timeEstimate"] = "";
+        }
+        obj["subtasks"] = arr;
+        newArrIssues.push(obj);
+    });
+    var objIssue = { "issues": newArrIssues };
+    newJsonEpic.push(objIssue);
+    console.log(newJsonEpic);
+    jsonArrEpic.forEach(function (epicObj) {
+        var obj = { "epic_name": epicObj["epic_name"], "story_point": epicObj["story_point"] };
+        newJsonEpic.forEach(function (newObj) {
+            if (epicObj["epic_name"] == newObj["epickey"]) {
+                obj["subtasks"] = newArrIssues;
+                newJsonArr.push(obj);
+            }
+        });
+    });
+    console.log(newJsonArr);
+    var str = JSON.stringify(newJsonArr);
+    console.log(str);
 };
 var makeJsonEpic = function (arrEpic) {
     var arrEpicIds = [];
@@ -147,6 +192,7 @@ var makeJsonEpic = function (arrEpic) {
     });
     getEpicIssues(arrEpicIds).then(function (jsonEpicIssues) {
         makeNewJsonEpic(jsonEpicIssues, jsonArrEpic).then(function (newJsonEpicIssue) {
+            filterEpicJson(newJsonEpicIssue);
             console.log(newJsonEpicIssue);
         });
         console.log(jsonEpicIssues);
