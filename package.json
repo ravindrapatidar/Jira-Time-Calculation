@@ -19,6 +19,7 @@
   "dependencies": {
     "@types/node": "^12.6.3",
     "jira-connector": "^2.15.6",
+    "linq": "^3.2.0",
     "q": "^1.5.1"
   }
 }

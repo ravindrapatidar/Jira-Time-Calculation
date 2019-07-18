@@ -1,6 +1,7 @@
 var q = require('Q');
 var JiraClient = require('jira-connector');
 const fs = require('fs');
+const enumerable = require('linq')
 const config = JSON.parse(fs.readFileSync("./config.json"));
 var storyPointKey = ""
 var jsonArrEpic: any = [];
@@ -95,16 +96,17 @@ const makeNewJsonEpic = (arrEpicIssues: [], oldJsonEpic: []) => {
         epicObjects.forEach((epicObject) => {
 
             let epicId = epicObject["epicId"]
-            var obj1 = { "epickey": epicId }
+            var obj1 = { "epickey": epicId } //epic key
             newJsonEpic.push(obj1);
 
-            let arr: [] = epicObject["issues"]
+            let arr: [] = epicObject["issues"] // issues in epic
             arr.forEach((issue) => {
                 if (issue["fields"]) {
                     console.log(issue["fields"]);
                     let fields = issue["fields"];
                     var parentKey = issue["key"]
                     var obj = { "issueKey": issue["key"] }
+                    obj["parentIssue"] = epicId
                     if (fields[storyPointKey] != undefined) {
                         obj["story_point"] = fields[storyPointKey];
                     } else {
@@ -142,23 +144,24 @@ const filterEpicJson = (arrSubtasks: []) => {
     arrIssues.forEach(issue => {
         var arr: any = [];
         arrSubtasks.forEach(task => {
-            if (task["parentKey"] == issue["epickey"]) {
-                var obj4 = { "issueKey": task["issueKey"] }
-                if (task["story_point"] != undefined) {
-                    obj4["story_point"] = task["story_point"]
+            let arrTask = task["value"]
+            if (arrTask[0]["parentKey"] == issue["issueKey"]) {
+                var obj4 = { "issueKey": arrTask[0]["issueKey"] }
+                if (arrTask[0]["story_point"] != undefined) {
+                    obj4["story_point"] = arrTask[0]["story_point"]
                 } else {
                     obj4["story_point"] = ""
                 }
-                if (task["timeEstimate"] != undefined) {
-                    obj4["timeEstimate"] = task["timeEstimate"]
+                if (arrTask[0]["timeEstimate"] != undefined) {
+                    obj4["timeEstimate"] = arrTask[0]["timeEstimate"]
                 } else {
                     obj4["timeEstimate"] = ""
                 }
                 arr.push(obj4);
             }
         });
-
-        var obj = { "issueKey": issue["key"] }
+         
+        var obj = { "issueKey": issue["issueKey"] }
         if (issue["story_point"] != undefined) {
             obj["story_point"] = issue["story_point"];
         } else {
@@ -170,23 +173,38 @@ const filterEpicJson = (arrSubtasks: []) => {
             obj["timeEstimate"] = "";
         }
         obj["subtasks"] = arr
-        newArrIssues.push(obj);
+        var key = issue["parentIssue"]
+        var obj1 = {}
+        obj1[key] = obj
+        newArrIssues.push(obj1);
 
     });
 
     var objIssue = { "issues": newArrIssues }
+  
     newJsonEpic.push(objIssue);
     console.log(newJsonEpic);
 
     jsonArrEpic.forEach(epicObj => {
-        var obj = { "epic_name": epicObj["epic_name"], "story_point": epicObj["story_point"] }
-        newJsonEpic.forEach(newObj => {
-            if (epicObj["epic_name"] == newObj["epickey"]) {
-                obj["subtasks"] = newArrIssues
-                newJsonArr.push(obj)
+        var obj = { "epic_name": epicObj["epic_name"], "story_point": epicObj["story_point"]}
+        var arrIssueSubtask = [];
+        Object.keys(newArrIssues).forEach(function(key) {
+            if(newArrIssues[key][epicObj["epic_name"]] != undefined) {
+                arrIssueSubtask.push(newArrIssues[key][epicObj["epic_name"]])
             }
+            console.log(newArrIssues[key], newArrIssues[key][epicObj["epic_name"]]);
         });
-
+        obj["subtasks"] = arrIssueSubtask;
+        newJsonArr.push(obj);
+        // var selectedIssue = enumerable.from(arrIssues).select(newObj => epicObj["epic_name"] == newObj["parentIssue"]).firstOrDefault();
+        // if(selectedIssue){
+        //     obj["subtasks"] = arrIssueSubtask
+        //     newJsonArr.push(obj)
+        // }else {
+        //     obj["subtasks"] = [];
+        //     newJsonArr.push(obj);
+        // }
+       
     });
     console.log(newJsonArr);
     let str = JSON.stringify(newJsonArr)
