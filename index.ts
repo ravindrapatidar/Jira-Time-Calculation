@@ -160,7 +160,7 @@ const filterEpicJson = (arrSubtasks: []) => {
                 arr.push(obj4);
             }
         });
-         
+
         var obj = { "issueKey": issue["issueKey"] }
         if (issue["story_point"] != undefined) {
             obj["story_point"] = issue["story_point"];
@@ -181,34 +181,27 @@ const filterEpicJson = (arrSubtasks: []) => {
     });
 
     var objIssue = { "issues": newArrIssues }
-  
+
     newJsonEpic.push(objIssue);
     console.log(newJsonEpic);
 
     jsonArrEpic.forEach(epicObj => {
-        var obj = { "epic_name": epicObj["epic_name"], "story_point": epicObj["story_point"]}
+        var obj = { "epic_name": epicObj["epic_name"], "story_point": epicObj["story_point"] }
         var arrIssueSubtask = [];
-        Object.keys(newArrIssues).forEach(function(key) {
-            if(newArrIssues[key][epicObj["epic_name"]] != undefined) {
+        Object.keys(newArrIssues).forEach(function (key) {
+            if (newArrIssues[key][epicObj["epic_name"]] != undefined) {
                 arrIssueSubtask.push(newArrIssues[key][epicObj["epic_name"]])
             }
             console.log(newArrIssues[key], newArrIssues[key][epicObj["epic_name"]]);
         });
         obj["subtasks"] = arrIssueSubtask;
         newJsonArr.push(obj);
-        // var selectedIssue = enumerable.from(arrIssues).select(newObj => epicObj["epic_name"] == newObj["parentIssue"]).firstOrDefault();
-        // if(selectedIssue){
-        //     obj["subtasks"] = arrIssueSubtask
-        //     newJsonArr.push(obj)
-        // }else {
-        //     obj["subtasks"] = [];
-        //     newJsonArr.push(obj);
-        // }
-       
     });
     console.log(newJsonArr);
     let str = JSON.stringify(newJsonArr)
     console.log(str);
+    return str;
+    
 }
 const makeJsonEpic = (arrEpic: []) => {
 
@@ -218,10 +211,13 @@ const makeJsonEpic = (arrEpic: []) => {
         jsonArrEpic.push(epicObj);
         arrEpicIds.push(epic["key"]);
     });
-    getEpicIssues(arrEpicIds).then(function (jsonEpicIssues) {
-        makeNewJsonEpic(jsonEpicIssues, jsonArrEpic).then(newJsonEpicIssue => {
-            filterEpicJson(newJsonEpicIssue);
+   return getEpicIssues(arrEpicIds).then(function (jsonEpicIssues) {
+      return  makeNewJsonEpic(jsonEpicIssues, jsonArrEpic).then(newJsonEpicIssue => {
             console.log(newJsonEpicIssue);
+            let epicJsonStr =  filterEpicJson(newJsonEpicIssue);
+            console.log(epicJsonStr);
+            return epicJsonStr;
+           
         })
         console.log(jsonEpicIssues);
     });
@@ -232,9 +228,12 @@ const getProjectEpic = (projectName: string) => {
     var jira = initJiraClient(config.jiraProjectKey);
     var jqlStr = `project = ${projectName} AND issuetype=Epic`
     var opt = { jql: jqlStr };
-    jira.search.search(opt).then(epic => {
+   return jira.search.search(opt).then(epic => {
         console.log(epic);
-        makeJsonEpic(epic.issues);
+        return makeJsonEpic(epic.issues).then(function(jsonStr) {
+            console.log(jsonStr);
+            return jsonStr
+         });
     }).catch(function (err) {
         console.log(err);
         // API call failed...
@@ -261,7 +260,9 @@ const getStoryPointAndTimeEstimateKey = () => {
         if (index) {
             key = fields[index].id;
             storyPointKey = key;
-            getProjectEpic("Node-Data");
+            getProjectEpic("Node-Data").then(function(finalJsonEpicRes) {
+                console.log(finalJsonEpicRes);
+            });
         }
     }).catch(function (err) {
         // API call failed...

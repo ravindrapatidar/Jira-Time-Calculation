@@ -187,18 +187,11 @@ var filterEpicJson = function (arrSubtasks) {
         });
         obj["subtasks"] = arrIssueSubtask;
         newJsonArr.push(obj);
-        // var selectedIssue = enumerable.from(arrIssues).select(newObj => epicObj["epic_name"] == newObj["parentIssue"]).firstOrDefault();
-        // if(selectedIssue){
-        //     obj["subtasks"] = arrIssueSubtask
-        //     newJsonArr.push(obj)
-        // }else {
-        //     obj["subtasks"] = [];
-        //     newJsonArr.push(obj);
-        // }
     });
     console.log(newJsonArr);
     var str = JSON.stringify(newJsonArr);
     console.log(str);
+    return str;
 };
 var makeJsonEpic = function (arrEpic) {
     var arrEpicIds = [];
@@ -207,10 +200,12 @@ var makeJsonEpic = function (arrEpic) {
         jsonArrEpic.push(epicObj);
         arrEpicIds.push(epic["key"]);
     });
-    getEpicIssues(arrEpicIds).then(function (jsonEpicIssues) {
-        makeNewJsonEpic(jsonEpicIssues, jsonArrEpic).then(function (newJsonEpicIssue) {
-            filterEpicJson(newJsonEpicIssue);
+    return getEpicIssues(arrEpicIds).then(function (jsonEpicIssues) {
+        return makeNewJsonEpic(jsonEpicIssues, jsonArrEpic).then(function (newJsonEpicIssue) {
             console.log(newJsonEpicIssue);
+            var epicJsonStr = filterEpicJson(newJsonEpicIssue);
+            console.log(epicJsonStr);
+            return epicJsonStr;
         });
         console.log(jsonEpicIssues);
     });
@@ -219,9 +214,12 @@ var getProjectEpic = function (projectName) {
     var jira = initJiraClient(config.jiraProjectKey);
     var jqlStr = "project = " + projectName + " AND issuetype=Epic";
     var opt = { jql: jqlStr };
-    jira.search.search(opt).then(function (epic) {
+    return jira.search.search(opt).then(function (epic) {
         console.log(epic);
-        makeJsonEpic(epic.issues);
+        return makeJsonEpic(epic.issues).then(function (jsonStr) {
+            console.log(jsonStr);
+            return jsonStr;
+        });
     })["catch"](function (err) {
         console.log(err);
         // API call failed...
@@ -245,7 +243,9 @@ var getStoryPointAndTimeEstimateKey = function () {
         if (index) {
             key = fields[index].id;
             storyPointKey = key;
-            getProjectEpic("Node-Data");
+            getProjectEpic("Node-Data").then(function (finalJsonEpicRes) {
+                console.log(finalJsonEpicRes);
+            });
         }
     })["catch"](function (err) {
         // API call failed...
