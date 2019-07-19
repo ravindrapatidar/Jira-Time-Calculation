@@ -228,7 +228,7 @@ var getProjectEpic = function (projectName) {
 };
 var getStoryPointAndTimeEstimateKey = function () {
     var jira = initJiraClient(config.jiraProjectKey);
-    jira.field.getAllFields().then(function (fields) {
+    return jira.field.getAllFields().then(function (fields) {
         //console.log(issue.fields[key]);
         var key = "";
         var val = "Story Points";
@@ -243,8 +243,9 @@ var getStoryPointAndTimeEstimateKey = function () {
         if (index) {
             key = fields[index].id;
             storyPointKey = key;
-            getProjectEpic("Node-Data").then(function (finalJsonEpicRes) {
+            return getProjectEpic("Node-Data").then(function (finalJsonEpicRes) {
                 console.log(finalJsonEpicRes);
+                return finalJsonEpicRes;
             });
         }
     })["catch"](function (err) {
@@ -252,4 +253,6 @@ var getStoryPointAndTimeEstimateKey = function () {
         throw err;
     });
 };
-getStoryPointAndTimeEstimateKey();
+getStoryPointAndTimeEstimateKey().then(function (res) {
+    console.log(res);
+});

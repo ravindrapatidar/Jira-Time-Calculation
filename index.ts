@@ -244,7 +244,7 @@ const getProjectEpic = (projectName: string) => {
 const getStoryPointAndTimeEstimateKey = () => {
     var jira = initJiraClient(config.jiraProjectKey);
 
-    jira.field.getAllFields().then(fields => {
+   return jira.field.getAllFields().then(fields => {
         //console.log(issue.fields[key]);
         var key = ""
         var val = "Story Points"
@@ -260,8 +260,9 @@ const getStoryPointAndTimeEstimateKey = () => {
         if (index) {
             key = fields[index].id;
             storyPointKey = key;
-            getProjectEpic("Node-Data").then(function(finalJsonEpicRes) {
+          return  getProjectEpic("Node-Data").then(function(finalJsonEpicRes) {
                 console.log(finalJsonEpicRes);
+                return finalJsonEpicRes;
             });
         }
     }).catch(function (err) {
@@ -270,6 +271,8 @@ const getStoryPointAndTimeEstimateKey = () => {
     });
 }
 
-getStoryPointAndTimeEstimateKey();
+getStoryPointAndTimeEstimateKey().then(function(res) {
+    console.log(res);
+});
 
 
