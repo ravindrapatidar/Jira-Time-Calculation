@@ -1,3 +1,5 @@
+"use strict";
+exports.__esModule = true;
 var q = require('Q');
 var JiraClient = require('jira-connector');
 var fs = require('fs');
@@ -226,7 +228,7 @@ var getProjectEpic = function (projectName) {
         throw err;
     });
 };
-var getStoryPointAndTimeEstimateKey = function () {
+exports.getStoryPointAndTimeEstimateKey = function () {
     var jira = initJiraClient(config.jiraProjectKey);
     return jira.field.getAllFields().then(function (fields) {
         //console.log(issue.fields[key]);
@@ -253,6 +255,6 @@ var getStoryPointAndTimeEstimateKey = function () {
         throw err;
     });
 };
-getStoryPointAndTimeEstimateKey().then(function (res) {
+exports.getStoryPointAndTimeEstimateKey().then(function (res) {
     console.log(res);
 });

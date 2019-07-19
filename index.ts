@@ -241,7 +241,7 @@ const getProjectEpic = (projectName: string) => {
     });
 }
 
-const getStoryPointAndTimeEstimateKey = () => {
+export const getStoryPointAndTimeEstimateKey = () => {
     var jira = initJiraClient(config.jiraProjectKey);
 
    return jira.field.getAllFields().then(fields => {
