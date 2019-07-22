@@ -58,7 +58,8 @@ var apiCall = function (key, epicId, arrJsonEpic, parentKey) {
     // var str = config.jiraProjectName + ".atlassian.net"
     // var url = "https://" + str + "rest/api/3/issue/NOD-130" 
     //var jira = initJiraClient(config.jiraProjectName);
-    var host = config.jiraProjectName + ".atlassian.net";
+    var jsonValues = exports.getProjectKeysJson();
+    var host = jsonValues["projectjiraname"] + ".atlassian.net";
     var timeKey = "timeestimate";
     var arrSubtask = [];
     var obj = { "parentKey": parentKey };
@@ -229,7 +230,8 @@ var getProjectEpic = function (projectName) {
     });
 };
 exports.getStoryPointAndTimeEstimateKey = function () {
-    var jira = initJiraClient(config.jiraProjectKey);
+    var jsonValues = exports.getProjectKeysJson();
+    var jira = initJiraClient(jsonValues["projectjiraKey"]);
     return jira.field.getAllFields().then(function (fields) {
         //console.log(issue.fields[key]);
         var key = "";
@@ -256,8 +258,9 @@ exports.getStoryPointAndTimeEstimateKey = function () {
     });
 };
 exports.getProjectKeysJson = function () {
-    var json = {};
-    return json;
+    var jsonKeys = {};
+    //"projectjiraKey": "node-data", "projectjiraname": "Node-Data"
+    return jsonKeys;
 };
 // getStoryPointAndTimeEstimateKey().then(function(res) {
 //     console.log(res);

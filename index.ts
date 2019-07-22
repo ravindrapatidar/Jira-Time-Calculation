@@ -58,7 +58,8 @@ const apiCall = (key: string, epicId: string, arrJsonEpic: [], parentKey: string
     // var str = config.jiraProjectName + ".atlassian.net"
     // var url = "https://" + str + "rest/api/3/issue/NOD-130" 
     //var jira = initJiraClient(config.jiraProjectName);
-    var host = config.jiraProjectName + ".atlassian.net"
+    let jsonValues = getProjectKeysJson();
+    var host = jsonValues["projectjiraname"]+ ".atlassian.net"
     var timeKey = "timeestimate"
     var arrSubtask: any = [];
 
@@ -242,7 +243,8 @@ const getProjectEpic = (projectName: string) => {
 }
 
 export const getStoryPointAndTimeEstimateKey = () => {
-    var jira = initJiraClient(config.jiraProjectKey);
+    let jsonValues = getProjectKeysJson();
+    var jira = initJiraClient(jsonValues["projectjiraKey"]);
 
    return jira.field.getAllFields().then(fields => {
         //console.log(issue.fields[key]);
@@ -272,8 +274,9 @@ export const getStoryPointAndTimeEstimateKey = () => {
 }
 
 export const getProjectKeysJson= () => {
-let json= {}
-return json;
+    var jsonKeys = {};
+    //"projectjiraKey": "node-data", "projectjiraname": "Node-Data"
+    return jsonKeys;
 }
 
 // getStoryPointAndTimeEstimateKey().then(function(res) {
