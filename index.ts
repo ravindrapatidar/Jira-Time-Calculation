@@ -32,7 +32,8 @@ const initJiraClientWithAuth = (projName: string) => {
 }
 
 const apiCallAsyncforGetEpicIssues = (epicId: string) => {
-    var jira = initJiraClientWithAuth(config.jiraProjectKey);
+    let jsonValuess = getProjectKeysJson();
+    var jira = initJiraClientWithAuth(jsonValuess["projectjiraKey"]);
     var arrIssues = [];
     return jira.epic.getIssuesForEpic({
         epicId: epicId
@@ -64,7 +65,8 @@ const apiCall = (key: string, epicId: string, arrJsonEpic: [], parentKey: string
     var arrSubtask: any = [];
 
     var obj = { "parentKey": parentKey }
-    var jira = initJiraClient(config.jiraProjectKey);
+    let jsonValuess = getProjectKeysJson();
+    var jira = initJiraClient(jsonValuess["projectjiraKey"]);
 
     return jira.issue.getIssue({ issueKey: epicId }).then(issue => {
         console.log(issue.fields[key]);
@@ -226,7 +228,8 @@ const makeJsonEpic = (arrEpic: []) => {
 }
 const getProjectEpic = (projectName: string) => {
 
-    var jira = initJiraClient(config.jiraProjectKey);
+    let jsonValues = getProjectKeysJson();
+    var jira = initJiraClient(jsonValues["projectjiraKey"]);
     var jqlStr = `project = ${projectName} AND issuetype=Epic`
     var opt = { jql: jqlStr };
    return jira.search.search(opt).then(epic => {

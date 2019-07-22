@@ -32,7 +32,8 @@ var initJiraClientWithAuth = function (projName) {
     return jira;
 };
 var apiCallAsyncforGetEpicIssues = function (epicId) {
-    var jira = initJiraClientWithAuth(config.jiraProjectKey);
+    var jsonValuess = exports.getProjectKeysJson();
+    var jira = initJiraClientWithAuth(jsonValuess["projectjiraKey"]);
     var arrIssues = [];
     return jira.epic.getIssuesForEpic({
         epicId: epicId
@@ -63,7 +64,8 @@ var apiCall = function (key, epicId, arrJsonEpic, parentKey) {
     var timeKey = "timeestimate";
     var arrSubtask = [];
     var obj = { "parentKey": parentKey };
-    var jira = initJiraClient(config.jiraProjectKey);
+    var jsonValuess = exports.getProjectKeysJson();
+    var jira = initJiraClient(jsonValuess["projectjiraKey"]);
     return jira.issue.getIssue({ issueKey: epicId }).then(function (issue) {
         console.log(issue.fields[key]);
         obj["issueKey"] = issue["key"];
@@ -214,7 +216,8 @@ var makeJsonEpic = function (arrEpic) {
     });
 };
 var getProjectEpic = function (projectName) {
-    var jira = initJiraClient(config.jiraProjectKey);
+    var jsonValues = exports.getProjectKeysJson();
+    var jira = initJiraClient(jsonValues["projectjiraKey"]);
     var jqlStr = "project = " + projectName + " AND issuetype=Epic";
     var opt = { jql: jqlStr };
     return jira.search.search(opt).then(function (epic) {
