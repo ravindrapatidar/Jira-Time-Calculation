@@ -271,8 +271,13 @@ export const getStoryPointAndTimeEstimateKey = () => {
     });
 }
 
-getStoryPointAndTimeEstimateKey().then(function(res) {
-    console.log(res);
-});
+export const getProjectKeysJson= () => {
+let json= {}
+return json;
+}
+
+// getStoryPointAndTimeEstimateKey().then(function(res) {
+//     console.log(res);
+// });
 
 
