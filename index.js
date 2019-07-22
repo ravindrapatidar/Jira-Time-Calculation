@@ -255,6 +255,10 @@ exports.getStoryPointAndTimeEstimateKey = function () {
         throw err;
     });
 };
-exports.getStoryPointAndTimeEstimateKey().then(function (res) {
-    console.log(res);
-});
+exports.getProjectKeysJson = function () {
+    var json = {};
+    return json;
+};
+// getStoryPointAndTimeEstimateKey().then(function(res) {
+//     console.log(res);
+// });
