@@ -265,6 +265,6 @@ exports.getProjectKeysJson = function () {
     // "api_token": "qUFeEOJEaD7ILyFgR0xb1057"}
     return jsonKeys;
 };
-exports.getStoryPointAndTimeEstimateKey().then(function (res) {
-    console.log(res);
-});
+// getStoryPointAndTimeEstimateKey().then(function(res) {
+//     console.log(res);
+// });

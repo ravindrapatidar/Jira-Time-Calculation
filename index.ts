@@ -283,8 +283,8 @@ export const getProjectKeysJson= () => {
     return jsonKeys;
 }
 
-getStoryPointAndTimeEstimateKey().then(function(res) {
-    console.log(res);
-});
+// getStoryPointAndTimeEstimateKey().then(function(res) {
+//     console.log(res);
+// });
 
 
