@@ -20,12 +20,13 @@ var initJiraClient = function (projName) {
     return jira;
 };
 var initJiraClientWithAuth = function (projName) {
+    var jsonValues = exports.getProjectKeysJson();
     var host = projName + ".atlassian.net";
     var jira = new JiraClient({
         host: host,
         basic_auth: {
-            email: "ravindra.patidar@talentica.com",
-            api_token: "qUFeEOJEaD7ILyFgR0xb1057"
+            email: jsonValues["email"],
+            api_token: jsonValues["api_token"]
         },
         strictSSL: true // One of optional parameters
     });
@@ -262,7 +263,8 @@ exports.getStoryPointAndTimeEstimateKey = function () {
 };
 exports.getProjectKeysJson = function () {
     var jsonKeys = {};
-    //"projectjiraKey": "node-data", "projectjiraname": "Node-Data"
+    // var jsonKeys = {"projectjiraKey": "node-data", "projectjiraname": "Node-Data", "email": "ravindra.patidar@talentica.com",
+    // "api_token": "qUFeEOJEaD7ILyFgR0xb1057"}
     return jsonKeys;
 };
 // getStoryPointAndTimeEstimateKey().then(function(res) {
